@@ -376,12 +376,12 @@ export class EnvironmentManager {
 
     setupFog(fogConfig) {
         if (fogConfig.enabled) {
-            this.scene.fogMode = BABYLON.Scene.FOGMODE_LINEAR;
+            this.scene.fogMode = BABYLON.SceneEnum.FOGMODE_LINEAR;
             this.scene.fogStart = fogConfig.start;
             this.scene.fogEnd = fogConfig.end;
             this.scene.fogColor = fogConfig.color;
         } else {
-            this.scene.fogMode = BABYLON.Scene.FOGMODE_NONE;
+            this.scene.fogMode = BABYLON.SceneEnum.FOGMODE_NONE;
         }
     }
 

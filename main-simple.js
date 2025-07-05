@@ -92,6 +92,10 @@ class SimpleChess3D {
             this.changeTheme(e.target.value);
         });
 
+        document.getElementById('environment').addEventListener('change', (e) => {
+            this.changeEnvironment(e.target.value);
+        });
+
         document.getElementById('ai-difficulty').addEventListener('change', (e) => {
             this.showNotification(`AI difficulty set to ${e.target.selectedOptions[0].text}`);
         });
@@ -307,6 +311,22 @@ class SimpleChess3D {
         if (this.scene && this.scene.render) {
             this.scene.render();
         }
+    }
+
+    changeEnvironment(envId) {
+        const backgrounds = {
+            library: 'linear-gradient(45deg, #5D4037, #3E2723)',
+            mountain: 'linear-gradient(45deg, #ECEFF1, #90A4AE)',
+            chamber: 'linear-gradient(45deg, #4E342E, #212121)',
+            void: 'linear-gradient(45deg, #000000, #434343)',
+            tournament: 'linear-gradient(45deg, #1E88E5, #1565C0)',
+            arena: 'linear-gradient(45deg, #880E4F, #4A148C)',
+            factory: 'linear-gradient(45deg, #757575, #424242)',
+            colosseum: 'linear-gradient(45deg, #8D6E63, #5D4037)'
+        };
+
+        document.body.style.background = backgrounds[envId] || 'linear-gradient(45deg, #2c3e50, #34495e)';
+        this.showNotification(`Environment changed to ${envId}`);
     }
 
     changeAICharacter(characterId) {
