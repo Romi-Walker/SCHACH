@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chess Rules Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #1a1a2e; color: white; }
+        .test-result { margin: 10px 0; padding: 10px; border-radius: 5px; }
+        .pass { background: #28a745; }
+        .fail { background: #dc3545; }
+        #board { display: grid; grid-template-columns: repeat(8, 50px); gap: 1px; margin: 20px 0; }
+        .square { width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+        .light { background: #f0d9b5; color: #333; }
+        .dark { background: #b58863; color: white; }
+    </style>
+</head>
+<body>
+    <h1>Chess Rules Test</h1>
+    <div id="results"></div>
+    <div id="board"></div>
+
+    <script src="libs/chess-mock.js"></script>
+    <script>
+        const results = document.getElementById('results');
+
+        function addResult(test, passed, message) {
+            const div = document.createElement('div');
+            div.className = `test-result ${passed ? 'pass' : 'fail'}`;
+            div.textContent = `${test}: ${passed ? 'PASS' : 'FAIL'} - ${message}`;
+            results.appendChild(div);
+        }
+
+        function testChessRules() {
+            const chess = new Chess();
+
+            // Test 1: Pawn can move 2 squares from start
+            let move = chess.move({from: 'e2', to: 'e4'});
+            addResult('Pawn 2-square start move', move !== null, 'e2-e4 should be valid');
+
+            // Test 2: Pawn cannot move 3 squares
+            chess.reset();
+            move = chess.move({from: 'e2', to: 'e5'});
+            addResult('Invalid pawn 3-square move', move === null, 'e2-e5 should be invalid');
+
+            // Test 3: Knight moves in L-shape
+            chess.reset();
+            move = chess.move({from: 'b1', to: 'c3'});
+            addResult('Knight L-shape move', move !== null, 'b1-c3 should be valid');
+
+            // Test 4: Knight cannot move like rook
+            chess.reset();
+            move = chess.move({from: 'b1', to: 'b3'});
+            addResult('Invalid knight straight move', move === null, 'b1-b3 should be invalid');
+
+            // Test 5: Rook blocked by piece
+            chess.reset();
+            move = chess.move({from: 'a1', to: 'a3'});
+            addResult('Rook blocked by pawn', move === null, 'a1-a3 should be blocked by pawn');
+
+            // Test 6: Cannot capture own piece
+            chess.reset();
+            move = chess.move({from: 'a1', to: 'a2'});
+            addResult('Cannot capture own piece', move === null, 'Cannot capture own pawn');
+
+            // Draw board
+            drawBoard(chess);
+        }
+
+        function drawBoard(chess) {
+            const board = document.getElementById('board');
+            board.innerHTML = '';
+            
+            const pieces = {
+                'p': '♟', 'r': '♜', 'n': '♞', 'b': '♝', 'q': '♛', 'k': '♚',
+                'P': '♙', 'R': '♖', 'N': '♘', 'B': '♗', 'Q': '♕', 'K': '♔'
+            };
+
+            for (let rank = 0; rank < 8; rank++) {
+                for (let file = 0; file < 8; file++) {
+                    const square = document.createElement('div');
+                    square.className = `square ${(rank + file) % 2 === 0 ? 'light' : 'dark'}`;
+                    
+                    const squareName = String.fromCharCode(97 + file) + (8 - rank);
+                    const piece = chess.get(squareName);
+                    
+                    if (piece) {
+                        const symbol = piece.color === 'w' ? 
+                            pieces[piece.type.toUpperCase()] : 
+                            pieces[piece.type.toLowerCase()];
+                        square.textContent = symbol;
+                    }
+                    
+                    board.appendChild(square);
+                }
+            }
+        }
+
+        // Run tests
+        testChessRules();
+    </script>
+</body>
+</html>

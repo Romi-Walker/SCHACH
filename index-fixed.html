@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Professional 3D Chess Game - Fixed</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Orbitron', 'Segoe UI', monospace;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
+            color: white;
+            overflow: hidden;
+            height: 100vh;
+            transition: background 1s ease;
+        }
+
+        .background-space {
+            background: 
+                radial-gradient(circle at 20% 30%, rgba(255, 255, 255, 0.8) 1px, transparent 1px),
+                radial-gradient(circle at 80% 70%, rgba(255, 255, 255, 0.6) 1px, transparent 1px),
+                radial-gradient(circle at 40% 80%, rgba(255, 255, 255, 0.4) 1px, transparent 1px),
+                radial-gradient(circle at 60% 20%, rgba(255, 255, 255, 0.7) 1px, transparent 1px),
+                radial-gradient(circle at 10% 60%, rgba(255, 255, 255, 0.5) 1px, transparent 1px),
+                linear-gradient(135deg, #0a0a2e 0%, #1a1a3e 50%, #2a2a4e 100%);
+            animation: stars-twinkle 3s ease-in-out infinite alternate;
+        }
+
+        .background-cyberpunk {
+            background: 
+                linear-gradient(45deg, rgba(255, 0, 255, 0.1) 25%, transparent 25%),
+                linear-gradient(-45deg, rgba(0, 255, 255, 0.1) 25%, transparent 25%),
+                linear-gradient(45deg, transparent 75%, rgba(255, 0, 255, 0.1) 75%),
+                linear-gradient(-45deg, transparent 75%, rgba(0, 255, 255, 0.1) 75%),
+                radial-gradient(circle at 30% 40%, rgba(255, 0, 255, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 70% 80%, rgba(0, 255, 255, 0.3) 0%, transparent 50%),
+                linear-gradient(135deg, #1a0a2e 0%, #2e1a2e 50%, #3e2a1e 100%);
+            background-size: 60px 60px, 60px 60px, 60px 60px, 60px 60px, 200px 200px, 200px 200px, 100% 100%;
+            animation: neon-pulse 2s ease-in-out infinite alternate;
+        }
+
+        .background-forest {
+            background: 
+                radial-gradient(circle at 25% 60%, rgba(34, 139, 34, 0.4) 20%, transparent 20%),
+                radial-gradient(circle at 75% 40%, rgba(46, 125, 50, 0.3) 15%, transparent 15%),
+                radial-gradient(circle at 50% 80%, rgba(56, 142, 60, 0.5) 25%, transparent 25%),
+                linear-gradient(180deg, rgba(76, 175, 80, 0.1) 0%, rgba(27, 94, 32, 0.3) 100%),
+                linear-gradient(135deg, #1b2e1b 0%, #2e4a2e 50%, #1a3a1a 100%);
+            animation: forest-sway 4s ease-in-out infinite alternate;
+        }
+
+        .background-underwater {
+            background: 
+                radial-gradient(circle at 30% 20%, rgba(0, 191, 255, 0.3) 10%, transparent 10%),
+                radial-gradient(circle at 70% 60%, rgba(0, 150, 255, 0.2) 8%, transparent 8%),
+                radial-gradient(circle at 20% 80%, rgba(0, 100, 255, 0.4) 12%, transparent 12%),
+                linear-gradient(180deg, rgba(0, 191, 255, 0.1) 0%, rgba(0, 64, 128, 0.4) 100%),
+                linear-gradient(135deg, #0a1a2e 0%, #1a2a4e 50%, #0a2a3e 100%);
+            animation: underwater-bubbles 3s ease-in-out infinite alternate;
+        }
+
+        .background-volcanic {
+            background: 
+                radial-gradient(circle at 40% 70%, rgba(255, 69, 0, 0.4) 15%, transparent 15%),
+                radial-gradient(circle at 80% 30%, rgba(255, 140, 0, 0.3) 10%, transparent 10%),
+                radial-gradient(circle at 10% 50%, rgba(255, 99, 71, 0.5) 20%, transparent 20%),
+                linear-gradient(180deg, rgba(139, 69, 19, 0.2) 0%, rgba(160, 82, 45, 0.4) 100%),
+                linear-gradient(135deg, #2e1a0a 0%, #4a2e1a 50%, #3a1a0a 100%);
+            animation: volcanic-glow 2.5s ease-in-out infinite alternate;
+        }
+
+        @keyframes stars-twinkle {
+            0% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+
+        @keyframes neon-pulse {
+            0% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+
+        @keyframes forest-sway {
+            0% { background-position: 0% 0%, 0% 0%, 0% 0%, 0% 0%, 0% 0%; }
+            100% { background-position: 2% -2%, -2% 2%, 1% -1%, 0% 0%, 0% 0%; }
+        }
+
+        @keyframes underwater-bubbles {
+            0% { background-position: 0% 0%, 0% 0%, 0% 0%, 0% 0%, 0% 0%; }
+            100% { background-position: 5% -10%, -3% -15%, 7% -12%, 0% 0%, 0% 0%; }
+        }
+
+        @keyframes volcanic-glow {
+            0% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+
+        #gameContainer {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+        }
+
+        #chess-board {
+            width: 600px;
+            height: 600px;
+            margin: auto;
+            border: 4px solid #00ffff;
+            box-shadow: 0 0 50px rgba(0, 255, 255, 0.5);
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            background: #333;
+        }
+
+        .square {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .square.light {
+            background-color: #f0d9b5;
+            color: #333;
+        }
+
+        .square.dark {
+            background-color: #b58863;
+            color: white;
+        }
+
+        .square.selected {
+            background-color: #ffff00 !important;
+            box-shadow: inset 0 0 20px rgba(255, 255, 0, 0.7);
+        }
+
+        .square.possible-move {
+            background-color: #90EE90 !important;
+            box-shadow: inset 0 0 15px rgba(0, 255, 0, 0.5);
+        }
+
+        .square.last-move {
+            background-color: #87CEEB !important;
+        }
+
+        .square:hover {
+            opacity: 0.8;
+            transform: scale(1.05);
+        }
+
+        #control-panel {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #00ffff;
+            border-radius: 10px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.3);
+            max-width: 300px;
+        }
+
+        #game-info {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #ff6600;
+            border-radius: 10px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 0 30px rgba(255, 102, 0, 0.3);
+            max-width: 300px;
+        }
+
+        .control-group {
+            margin-bottom: 15px;
+        }
+
+        .control-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #00ffff;
+            font-weight: bold;
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+        }
+
+        select, button {
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            border: 1px solid #00ffff;
+            border-radius: 5px;
+            padding: 8px 12px;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-bottom: 5px;
+        }
+
+        select:hover, button:hover {
+            background: rgba(0, 255, 255, 0.1);
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.4);
+        }
+
+        button:active {
+            transform: scale(0.95);
+        }
+
+        .ai-character-display {
+            font-size: 48px;
+            text-align: center;
+            padding: 10px;
+            margin: 10px 0;
+            background: rgba(0, 255, 255, 0.1);
+            border-radius: 10px;
+            border: 2px solid rgba(0, 255, 255, 0.3);
+        }
+
+        #ai-robot-type {
+            font-size: 12px;
+            color: #ffaa00;
+            font-style: italic;
+        }
+
+        #loading-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(0, 255, 255, 0.3);
+            border-top: 4px solid #00ffff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            font-size: 24px;
+            color: #00ffff;
+            text-align: center;
+            text-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+        }
+
+        .cyberpunk-title {
+            font-size: 48px;
+            background: linear-gradient(45deg, #00ffff, #ff6600, #00ff00);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-align: center;
+            margin-bottom: 30px;
+            text-shadow: 0 0 30px rgba(0, 255, 255, 0.3);
+        }
+
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap');
+    </style>
+</head>
+<body>
+    <div id="loading-screen">
+        <h1 class="cyberpunk-title">PROFESSIONAL 3D CHESS</h1>
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Initializing Chess Engine...</div>
+    </div>
+
+    <div id="gameContainer">
+        <div id="chess-board"></div>
+        
+        <div id="control-panel">
+            <div class="control-group">
+                <label for="board-theme">Board Theme:</label>
+                <select id="board-theme">
+                    <option value="classic">Classic Wood</option>
+                    <option value="cyberpunk">Cyberpunk Neon</option>
+                    <option value="crystal">Crystal Palace</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label for="environment">Environment:</label>
+                <select id="environment">
+                    <option value="default">Default Space</option>
+                    <option value="space">Deep Space</option>
+                    <option value="cyberpunk">Cyberpunk City</option>
+                    <option value="forest">Enchanted Forest</option>
+                    <option value="underwater">Underwater Temple</option>
+                    <option value="volcanic">Volcanic Realm</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label for="ai-character">AI Opponent:</label>
+                <select id="ai-character">
+                    <option value="neon-hacker">Neon Hacker</option>
+                    <option value="cyber-warrior">Cyber Warrior</option>
+                    <option value="data-ghost">Data Ghost</option>
+                    <option value="chrome-knight">Chrome Knight</option>
+                    <option value="neural-queen">Neural Queen</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label for="robot-type">Robot Type:</label>
+                <select id="robot-type">
+                    <option value="humanoid">Humanoid Android</option>
+                    <option value="tactical">Tactical Unit</option>
+                    <option value="combat">Combat Drone</option>
+                    <option value="stealth">Stealth Bot</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <button id="new-game">New Game</button>
+                <button id="undo">Undo</button>
+                <button id="hint">Hint</button>
+            </div>
+
+            <div class="control-group">
+                <label for="ai-difficulty">AI Difficulty:</label>
+                <select id="ai-difficulty">
+                    <option value="1">Beginner</option>
+                    <option value="2">Amateur</option>
+                    <option value="3" selected>Intermediate</option>
+                    <option value="4">Advanced</option>
+                </select>
+            </div>
+        </div>
+
+        <div id="game-info">
+            <h3>Game Status</h3>
+            <div class="control-group">
+                <div id="current-player">White to move</div>
+                <div id="move-count">Move: 1</div>
+                <div id="game-status">Game in progress</div>
+            </div>
+
+            <div class="control-group">
+                <h4>AI Opponent</h4>
+                <div id="ai-avatar">Neon Hacker</div>
+                <div id="ai-robot-type">Humanoid Android</div>
+                <div id="ai-status">Ready</div>
+                <div id="ai-visual" class="ai-character-display">🕴️🤖</div>
+            </div>
+
+            <div class="control-group">
+                <h4>Last Move</h4>
+                <div id="last-move">None</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chess Engine -->
+    <script src="libs/chess-mock.js"></script>
+    
+    <script>
+        class FixedChessGame {
+            constructor() {
+                this.chess = new Chess();
+                this.selectedSquare = null;
+                this.currentPlayer = 'white';
+                this.moveHistory = [];
+                this.aiThinking = false;
+                
+                this.init();
+            }
+
+            async init() {
+                try {
+                    this.createBoard();
+                    this.setupEventListeners();
+                    
+                    // Hide loading screen
+                    setTimeout(() => {
+                        this.hideLoadingScreen();
+                    }, 2000);
+                    
+                } catch (error) {
+                    console.error('Failed to initialize game:', error);
+                    this.showError('Failed to initialize the game. Please refresh and try again.');
+                }
+            }
+
+            hideLoadingScreen() {
+                const loadingScreen = document.getElementById('loading-screen');
+                loadingScreen.style.opacity = '0';
+                setTimeout(() => {
+                    loadingScreen.style.display = 'none';
+                }, 500);
+            }
+
+            showError(message) {
+                const loadingText = document.querySelector('.loading-text');
+                if (loadingText) {
+                    loadingText.textContent = message;
+                    loadingText.style.color = '#ff0000';
+                }
+            }
+
+            createBoard() {
+                const board = document.getElementById('chess-board');
+                board.innerHTML = '';
+
+                for (let rank = 0; rank < 8; rank++) {
+                    for (let file = 0; file < 8; file++) {
+                        const square = document.createElement('div');
+                        square.className = `square ${(rank + file) % 2 === 0 ? 'light' : 'dark'}`;
+                        square.dataset.square = String.fromCharCode(97 + file) + (8 - rank);
+                        square.addEventListener('click', () => this.handleSquareClick(square.dataset.square));
+                        board.appendChild(square);
+                    }
+                }
+
+                this.updateBoard();
+            }
+
+            updateBoard() {
+                const pieces = {
+                    'p': '♟', 'r': '♜', 'n': '♞', 'b': '♝', 'q': '♛', 'k': '♚',
+                    'P': '♙', 'R': '♖', 'N': '♘', 'B': '♗', 'Q': '♕', 'K': '♔'
+                };
+
+                for (let rank = 0; rank < 8; rank++) {
+                    for (let file = 0; file < 8; file++) {
+                        const squareName = String.fromCharCode(97 + file) + (8 - rank);
+                        const square = document.querySelector(`[data-square="${squareName}"]`);
+                        const piece = this.chess.get(squareName);
+                        
+                        if (piece) {
+                            const symbol = piece.color === 'w' ? 
+                                pieces[piece.type.toUpperCase()] : 
+                                pieces[piece.type.toLowerCase()];
+                            square.textContent = symbol;
+                        } else {
+                            square.textContent = '';
+                        }
+                    }
+                }
+
+                // Clear highlights
+                document.querySelectorAll('.square').forEach(sq => {
+                    sq.classList.remove('selected', 'possible-move', 'last-move');
+                });
+            }
+
+            handleSquareClick(square) {
+                if (this.aiThinking) return;
+
+                if (this.selectedSquare) {
+                    // Try to make a move
+                    const move = this.chess.move({
+                        from: this.selectedSquare,
+                        to: square
+                    });
+                    
+                    if (move) {
+                        this.updateGameInfo(move);
+                        this.selectedSquare = null;
+                        this.updateBoard();
+                        
+                        // Switch to AI player and make AI move
+                        this.currentPlayer = 'black';
+                        this.updateUI();
+                        setTimeout(() => this.makeAIMove(), 1000);
+                        
+                        this.updateUI();
+                        this.showNotification(`Move: ${move.san}`);
+                    } else {
+                        this.showNotification('Invalid move!', 'error');
+                        this.selectedSquare = null;
+                        this.updateBoard();
+                    }
+                } else {
+                    // Select a piece
+                    const piece = this.chess.get(square);
+                    if (piece && ((this.currentPlayer === 'white' && piece.color === 'w') ||
+                                 (this.currentPlayer === 'black' && piece.color === 'b'))) {
+                        this.selectedSquare = square;
+                        this.showNotification(`Selected ${piece.type} on ${square}`);
+                        
+                        // Highlight selected square
+                        document.querySelector(`[data-square="${square}"]`).classList.add('selected');
+                        
+                        // Show possible moves
+                        const moves = this.chess.moves({ square: square });
+                        moves.forEach(move => {
+                            if (typeof move === 'string') {
+                                // Extract destination square from SAN notation
+                                const destSquare = move.slice(-2);
+                                if (/^[a-h][1-8]$/.test(destSquare)) {
+                                    document.querySelector(`[data-square="${destSquare}"]`)?.classList.add('possible-move');
+                                }
+                            } else if (move.to) {
+                                document.querySelector(`[data-square="${move.to}"]`)?.classList.add('possible-move');
+                            }
+                        });
+                    } else {
+                        this.showNotification('Select your own piece!', 'warning');
+                    }
+                }
+            }
+
+            makeAIMove() {
+                if (this.aiThinking || this.chess.turn() !== 'b') {
+                    return; // Prevent double moves
+                }
+                
+                this.aiThinking = true;
+                this.updateAIStatus('Thinking...');
+                
+                setTimeout(() => {
+                    try {
+                        const moves = this.chess.moves();
+                        console.log('AI turn, available moves:', moves.length);
+                        
+                        if (moves.length > 0 && this.chess.turn() === 'b') {
+                            const randomMove = moves[Math.floor(Math.random() * moves.length)];
+                            const move = this.chess.move(randomMove);
+                            
+                            if (move) {
+                                console.log('AI made move:', move.san);
+                                this.updateGameInfo(move);
+                                this.currentPlayer = 'white';
+                                this.updateBoard();
+                                this.updateUI();
+                                this.showNotification(`AI played: ${move.san}`);
+                            }
+                        } else {
+                            console.log('No moves available for AI or not AI turn');
+                        }
+                    } catch (error) {
+                        console.error('AI move error:', error);
+                    }
+                    
+                    this.aiThinking = false;
+                    this.updateAIStatus('Ready');
+                }, 500 + Math.random() * 1500);
+            }
+
+            updateGameInfo(move) {
+                this.moveHistory.push(move);
+                
+                document.getElementById('last-move').textContent = move.san;
+                document.getElementById('move-count').textContent = `Move: ${Math.ceil(this.moveHistory.length / 2)}`;
+                
+                if (this.chess.isGameOver()) {
+                    let status = '';
+                    if (this.chess.isCheckmate()) {
+                        status = this.currentPlayer === 'white' ? 'Black wins by checkmate!' : 'White wins by checkmate!';
+                    } else if (this.chess.isDraw()) {
+                        status = 'Game drawn!';
+                    }
+                    document.getElementById('game-status').textContent = status;
+                    this.showNotification(status);
+                }
+            }
+
+            updateUI() {
+                const currentPlayerText = this.currentPlayer === 'white' ? 'White to move' : 'Black to move';
+                document.getElementById('current-player').textContent = currentPlayerText;
+            }
+
+            updateAIStatus(status) {
+                document.getElementById('ai-status').textContent = status;
+            }
+
+            setupEventListeners() {
+                document.getElementById('new-game').addEventListener('click', () => {
+                    this.startNewGame();
+                });
+
+                document.getElementById('undo').addEventListener('click', () => {
+                    this.undoMove();
+                });
+
+                document.getElementById('hint').addEventListener('click', () => {
+                    this.showHint();
+                });
+
+                document.getElementById('board-theme').addEventListener('change', (e) => {
+                    this.changeTheme(e.target.value);
+                });
+
+                document.getElementById('environment').addEventListener('change', (e) => {
+                    this.changeEnvironment(e.target.value);
+                });
+
+                document.getElementById('ai-character').addEventListener('change', (e) => {
+                    this.changeAICharacter(e.target.value);
+                });
+
+                document.getElementById('robot-type').addEventListener('change', (e) => {
+                    this.changeRobotType(e.target.value);
+                });
+            }
+
+            startNewGame() {
+                this.chess.reset();
+                this.currentPlayer = 'white';
+                this.selectedSquare = null;
+                this.moveHistory = [];
+                this.aiThinking = false;
+                
+                document.getElementById('current-player').textContent = 'White to move';
+                document.getElementById('move-count').textContent = 'Move: 1';
+                document.getElementById('game-status').textContent = 'Game in progress';
+                document.getElementById('last-move').textContent = 'None';
+                
+                this.updateBoard();
+                this.showNotification('New game started!');
+            }
+
+            undoMove() {
+                if (this.moveHistory.length === 0) {
+                    this.showNotification('No moves to undo!', 'warning');
+                    return;
+                }
+
+                const undoneMove = this.chess.undo();
+                if (undoneMove) {
+                    this.moveHistory.pop();
+                    
+                    if (this.currentPlayer === 'white') {
+                        const aiMove = this.chess.undo();
+                        if (aiMove) {
+                            this.moveHistory.pop();
+                        }
+                    } else {
+                        this.currentPlayer = 'white';
+                    }
+                    
+                    this.updateBoard();
+                    this.updateUI();
+                    this.showNotification('Move undone');
+                    
+                    document.getElementById('move-count').textContent = `Move: ${Math.ceil(this.moveHistory.length / 2)}`;
+                    if (this.moveHistory.length > 0) {
+                        document.getElementById('last-move').textContent = this.moveHistory[this.moveHistory.length - 1].san;
+                    } else {
+                        document.getElementById('last-move').textContent = 'None';
+                    }
+                }
+            }
+
+            showHint() {
+                const moves = this.chess.moves();
+                if (moves.length > 0) {
+                    const randomMove = moves[Math.floor(Math.random() * moves.length)];
+                    this.showNotification(`Hint: Try ${randomMove}`);
+                } else {
+                    this.showNotification('No legal moves available!');
+                }
+            }
+
+            changeTheme(themeId) {
+                const board = document.getElementById('chess-board');
+                const squares = document.querySelectorAll('.square');
+                
+                switch (themeId) {
+                    case 'cyberpunk':
+                        board.style.borderColor = '#ff00ff';
+                        board.style.boxShadow = '0 0 50px rgba(255, 0, 255, 0.5)';
+                        squares.forEach(square => {
+                            if (square.classList.contains('light')) {
+                                square.style.background = '#1a1a2e';
+                                square.style.color = '#00ffff';
+                            } else {
+                                square.style.background = '#0f0f1e';
+                                square.style.color = '#ff00ff';
+                            }
+                        });
+                        break;
+                    case 'crystal':
+                        board.style.borderColor = '#87CEEB';
+                        board.style.boxShadow = '0 0 50px rgba(135, 206, 235, 0.5)';
+                        squares.forEach(square => {
+                            if (square.classList.contains('light')) {
+                                square.style.background = 'rgba(255, 255, 255, 0.8)';
+                                square.style.color = '#333';
+                            } else {
+                                square.style.background = 'rgba(135, 206, 235, 0.6)';
+                                square.style.color = '#fff';
+                            }
+                        });
+                        break;
+                    default: // classic
+                        board.style.borderColor = '#00ffff';
+                        board.style.boxShadow = '0 0 50px rgba(0, 255, 255, 0.5)';
+                        squares.forEach(square => {
+                            if (square.classList.contains('light')) {
+                                square.style.background = '#f0d9b5';
+                                square.style.color = '#333';
+                            } else {
+                                square.style.background = '#b58863';
+                                square.style.color = '#fff';
+                            }
+                        });
+                        break;
+                }
+                
+                this.showNotification(`Theme changed to ${themeId}`);
+            }
+
+            changeEnvironment(environmentId) {
+                const body = document.body;
+                
+                // Remove all background classes
+                body.classList.remove('background-space', 'background-cyberpunk', 'background-forest', 'background-underwater', 'background-volcanic');
+                
+                switch (environmentId) {
+                    case 'space':
+                        body.classList.add('background-space');
+                        this.showNotification('Environment: Deep Space with twinkling stars');
+                        break;
+                    case 'cyberpunk':
+                        body.classList.add('background-cyberpunk');
+                        this.showNotification('Environment: Cyberpunk City with neon lights');
+                        break;
+                    case 'forest':
+                        body.classList.add('background-forest');
+                        this.showNotification('Environment: Enchanted Forest with swaying trees');
+                        break;
+                    case 'underwater':
+                        body.classList.add('background-underwater');
+                        this.showNotification('Environment: Underwater Temple with floating bubbles');
+                        break;
+                    case 'volcanic':
+                        body.classList.add('background-volcanic');
+                        this.showNotification('Environment: Volcanic Realm with glowing lava');
+                        break;
+                    default:
+                        this.showNotification('Environment: Default Space');
+                        break;
+                }
+            }
+
+            changeAICharacter(characterId) {
+                const characters = {
+                    'neon-hacker': { name: 'Neon Hacker', emoji: '🕴️', color: '#00ffff' },
+                    'cyber-warrior': { name: 'Cyber Warrior', emoji: '⚔️', color: '#ff6600' },
+                    'data-ghost': { name: 'Data Ghost', emoji: '👻', color: '#9400d3' },
+                    'chrome-knight': { name: 'Chrome Knight', emoji: '🏰', color: '#c0c0c0' },
+                    'neural-queen': { name: 'Neural Queen', emoji: '👑', color: '#ff1493' }
+                };
+                
+                const character = characters[characterId];
+                if (character) {
+                    document.getElementById('ai-avatar').textContent = character.name;
+                    const robotEmoji = document.getElementById('ai-visual').textContent.slice(-2);
+                    document.getElementById('ai-visual').textContent = character.emoji + robotEmoji;
+                    document.getElementById('ai-visual').style.color = character.color;
+                    this.showNotification(`AI character changed to ${character.name}`);
+                }
+            }
+
+            changeRobotType(robotType) {
+                const robots = {
+                    'humanoid': { name: 'Humanoid Android', emoji: '🤖' },
+                    'tactical': { name: 'Tactical Unit', emoji: '🦾' },
+                    'combat': { name: 'Combat Drone', emoji: '🚁' },
+                    'stealth': { name: 'Stealth Bot', emoji: '🥷' }
+                };
+                
+                const robot = robots[robotType];
+                if (robot) {
+                    document.getElementById('ai-robot-type').textContent = robot.name;
+                    const characterEmoji = document.getElementById('ai-visual').textContent.slice(0, -2);
+                    document.getElementById('ai-visual').textContent = characterEmoji + robot.emoji;
+                    this.showNotification(`Robot type changed to ${robot.name}`);
+                }
+            }
+
+            showNotification(message, type = 'info') {
+                const notification = document.createElement('div');
+                notification.className = 'notification';
+                notification.textContent = message;
+                
+                const color = type === 'error' ? '#ff0000' : type === 'warning' ? '#ffaa00' : '#00ffff';
+                notification.style.cssText = `
+                    position: fixed;
+                    top: 50px;
+                    right: 20px;
+                    background: rgba(0, 0, 0, 0.9);
+                    color: white;
+                    padding: 15px 20px;
+                    border-radius: 5px;
+                    border-left: 4px solid ${color};
+                    z-index: 10000;
+                    max-width: 300px;
+                    font-size: 14px;
+                    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+                    transform: translateX(100%);
+                    transition: transform 0.3s ease;
+                `;
+                
+                document.body.appendChild(notification);
+                
+                setTimeout(() => {
+                    notification.style.transform = 'translateX(0)';
+                }, 100);
+                
+                setTimeout(() => {
+                    notification.style.transform = 'translateX(100%)';
+                    setTimeout(() => {
+                        if (notification.parentNode) {
+                            notification.parentNode.removeChild(notification);
+                        }
+                    }, 300);
+                }, 3000);
+            }
+        }
+
+        // Initialize when page loads
+        window.addEventListener('load', () => {
+            window.chessGame = new FixedChessGame();
+        });
+    </script>
+</body>
+</html>
