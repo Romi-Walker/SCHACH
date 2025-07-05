@@ -75,10 +75,11 @@ window.Chess = function() {
                 color: piece.color,
                 captured: captured ? captured.type : undefined
             };
-            
-            game.moveHistory.push(moveResult);
+
             game.currentPlayer = game.currentPlayer === 'w' ? 'b' : 'w';
-            
+            moveResult.fen = this.fen();
+            game.moveHistory.push(moveResult);
+
             return moveResult;
         },
         
@@ -306,12 +307,12 @@ window.Chess = function() {
         },
         
         isThreefoldRepetition: function() {
-            // Simple implementation - check if same position occurred 3 times
             const positions = {};
             for (const move of game.moveHistory) {
-                const fen = this.fen();
-                positions[fen] = (positions[fen] || 0) + 1;
-                if (positions[fen] >= 3) return true;
+                if (move.fen) {
+                    positions[move.fen] = (positions[move.fen] || 0) + 1;
+                    if (positions[move.fen] >= 3) return true;
+                }
             }
             return false;
         },
@@ -321,7 +322,29 @@ window.Chess = function() {
         },
         
         fen: function() {
-            return "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+            let fen = '';
+            for (let rank = 0; rank < 8; rank++) {
+                let empty = 0;
+                for (let file = 0; file < 8; file++) {
+                    const piece = game.board[rank][file];
+                    if (piece) {
+                        if (empty > 0) {
+                            fen += empty;
+                            empty = 0;
+                        }
+                        const symbol = piece.color === 'w'
+                            ? piece.type.toUpperCase()
+                            : piece.type;
+                        fen += symbol;
+                    } else {
+                        empty++;
+                    }
+                }
+                if (empty > 0) fen += empty;
+                if (rank < 7) fen += '/';
+            }
+            fen += ` ${game.currentPlayer} - - 0 ${Math.floor(game.moveHistory.length/2)+1}`;
+            return fen;
         },
         
         pgn: function() {
