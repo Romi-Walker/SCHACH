@@ -175,15 +175,26 @@ class SimpleChess3D {
             if (moves.length > 0) {
                 const randomMove = moves[Math.floor(Math.random() * moves.length)];
                 const move = this.chess.move(randomMove);
-                
+
                 if (move) {
                     this.updateGameInfo(move);
                     this.currentPlayer = 'white';
                     this.updateUI();
                     this.showNotification(`AI played: ${move.san}`);
                 }
+            } else {
+                // No legal moves for AI - game over
+                let status = '';
+                if (this.chess.inCheck()) {
+                    status = 'White wins by checkmate!';
+                } else {
+                    status = 'Game drawn!';
+                }
+                document.getElementById('game-status').textContent = status;
+                this.showNotification(status);
+                this.currentPlayer = 'white';
             }
-            
+
             this.updateAIStatus('Ready');
         }, 500 + Math.random() * 1500); // Random thinking time
     }
