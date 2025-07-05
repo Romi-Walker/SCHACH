@@ -171,7 +171,7 @@ class SimpleChess3D {
         this.updateAIStatus('Thinking...');
         
         setTimeout(() => {
-            const moves = this.chess.moves();
+            const moves = this.chess.moves({ verbose: true });
             if (moves.length > 0) {
                 const randomMove = moves[Math.floor(Math.random() * moves.length)];
                 const move = this.chess.move(randomMove);
