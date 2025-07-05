@@ -96,16 +96,31 @@ window.BABYLON = {
             },
             
             drawPieces: function(ctx, startX, startY, squareSize) {
-                const pieces = [
-                    '♜♞♝♛♚♝♞♜',
-                    '♟♟♟♟♟♟♟♟',
-                    '        ',
-                    '        ',
-                    '        ',
-                    '        ',
-                    '♙♙♙♙♙♙♙♙',
-                    '♖♘♗♕♔♗♘♖'
-                ];
+                // Map pieces to unicode symbols
+                const symbols = {
+                    'p': '♟', 'r': '♜', 'n': '♞', 'b': '♝', 'q': '♛', 'k': '♚',
+                    'P': '♙', 'R': '♖', 'N': '♘', 'B': '♗', 'Q': '♕', 'K': '♔'
+                };
+
+                // Try to get actual board state from the chess game
+                let board = null;
+                if (window.chessGame3D && window.chessGame3D.chess && typeof window.chessGame3D.chess.board === 'function') {
+                    board = window.chessGame3D.chess.board();
+                }
+
+                // Fallback to starting position if game not available
+                if (!board) {
+                    board = [
+                        'rnbqkbnr'.split(''),
+                        'pppppppp'.split(''),
+                        '        '.split(''),
+                        '        '.split(''),
+                        '        '.split(''),
+                        '        '.split(''),
+                        'PPPPPPPP'.split(''),
+                        'RNBQKBNR'.split('')
+                    ];
+                }
                 
                 ctx.font = `${squareSize * 0.7}px Arial`;
                 ctx.textAlign = 'center';
@@ -113,13 +128,14 @@ window.BABYLON = {
                 
                 for (let row = 0; row < 8; row++) {
                     for (let col = 0; col < 8; col++) {
-                        const piece = pieces[row][col];
-                        if (piece !== ' ') {
+                        const piece = board[row][col];
+                        if (piece && piece !== ' ') {
+                            const symbol = symbols[piece.type ? (piece.color === 'w' ? piece.type.toUpperCase() : piece.type.toLowerCase()) : piece];
                             const x = startX + col * squareSize + squareSize / 2;
                             const y = startY + row * squareSize + squareSize / 2;
-                            
+
                             ctx.fillStyle = '#000';
-                            ctx.fillText(piece, x, y);
+                            ctx.fillText(symbol, x, y);
                         }
                     }
                 }
@@ -469,7 +485,7 @@ window.BABYLON = {
         BILLBOARDMODE_Y: 2
     },
     
-    Scene: {
+    SceneEnum: {
         FOGMODE_NONE: 0,
         FOGMODE_LINEAR: 1
     },
